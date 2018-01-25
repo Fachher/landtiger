@@ -1,0 +1,5 @@
+speed 400
+r
+h
+loadbin blink.bin , 0
+
