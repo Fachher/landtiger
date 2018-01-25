@@ -1,0 +1,64 @@
+
+T4021C6C0 000:000 SEGGER J-Link V4.78k Log File (0000ms, 0000ms total)
+T4021C6C0 000:000 DLL Compiled: Dec  5 2013 20:30:31 (0000ms, 0000ms total)
+T4021C6C0 000:000 Logging started @ 2014-01-12 13:13 (0000ms, 0000ms total)
+T4021C6C0 000:000 JLINK_SetWarnOutHandler(...) (0000ms, 0000ms total)
+T4021C6C0 000:000 JLINK_SelectUSB(Port = 0)  returns 0x00 (0000ms, 0000ms total)
+T4021C6C0 000:000 JLINK_OpenEx(...)
+Firmware: J-Link ARM-OB STM32 compiled Aug 22 2012 19:52:04
+Hardware: V7.00
+S/N: 20090928
+Feature(s): RDI,FlashDL,FlashBP,JFlash,GDBFull  returns O.K. (0297ms, 0297ms total)
+T4021C6C0 000:298 JLINK_SetErrorOutHandler(...) (0000ms, 0297ms total)
+T4021C6C0 000:298 JLINK_EnableLog(...) (0000ms, 0297ms total)
+T4021C6C0 000:298 JLINK_SetInitRegsOnReset(OFF)  returns 0x01 (0000ms, 0297ms total)
+T4021C6C0 000:298 JLINK_GetDLLVersion()  returns 47811 (0000ms, 0297ms total)
+T4021C6C0 000:298 JLINK_GetCompileDateTime() (0000ms, 0297ms total)
+T4021C6C0 000:298 JLINK_GetFirmwareString(...) (0000ms, 0297ms total)
+T4021C6C0 000:298 JLINK_GetHardwareVersion()  returns 0x11170 (0000ms, 0297ms total)
+T4021C6C0 000:298 JLINK_EMU_HasCapEx(0x00000026)  returns 0x00 (0000ms, 0297ms total)
+T4021C6C0 000:298 JLINK_EMU_GetProductId() (0000ms, 0297ms total)
+T4021C6C0 000:298 JLINK_GetHardwareVersion()  returns 0x11170 (0000ms, 0297ms total)
+T4021C6C0 000:298 JLINK_GetFirmwareString(...) (0000ms, 0297ms total)
+T4021C6C0 000:298 JLINK_GetEmuCaps()  returns 0x88EA5833 (0000ms, 0297ms total)
+T4021C6C0 000:298 JLINK_GetEmuCaps()  returns 0x88EA5833 (0000ms, 0297ms total)
+T4021C6C0 000:298 JLINK_GetHWStatus(...)  returns 0x00 (0003ms, 0300ms total)
+T4021C6C0 000:301 JLINK_SetSpeed(100) (0001ms, 0301ms total)
+T4021C6C0 000:302 JLINK_GetEmuCaps()  returns 0x88EA5833 (0000ms, 0301ms total)
+T4021C6C0 000:302 JLINK_TIF_GetAvailable(...) (0002ms, 0303ms total)
+T4021C6C0 000:304 JLINK_Connect() >0x2F8 JTAG>TotalIRLen = 4, IRPrint = 0x01 >0x30 JTAG> >0x210 JTAG> >0x70 JTAG> >0x40 JTAG> >0x40 JTAG> >0x40 JTAG> >0x48 JTAG> >0x78 JTAG> >0x40 JTAG> >0x30 JTAG> >0x40 JTAG> >0x40 JTAG> >0x30 JTAG> >0x40 JTAG> >0x48 JTAG>Found Cortex-M3 r2p0, Little endian. >0x1D0 JTAG> >0x1D8 JTAG> >0x1D8 JTAG>FPUnit: 6 code (BP) slots and 2 literal slots >0x1D8 JTAG> >0x1D8 JTAG> >0x1D0 JTAG> >0x1D8 JTAG>TPIU fitted. >0x1D8 JTAG>ETM fitted. >0x1D8 JTAG>  returns 0x00
+ (0104ms, 0407ms total)
+T4021C6C0 000:408 JLINK_GetIdData(...) ScanLen=4 NumDevices=1 aId[0]=0x4BA00477 aIrRead[0]=0 aScanLen[0]=0 aScanRead[0]=0 (0000ms, 0407ms total)
+T4021C6C0 000:408 JLINK_JTAG_GetDeviceID(DeviceIndex = 0)  returns 0x4BA00477 (0000ms, 0407ms total)
+T4021C6C0 000:408 JLINK_JTAG_GetDeviceInfo(DeviceIndex = 0)  returns 0x00 (0000ms, 0407ms total)
+T4021C6C0 000:408 JLINK_GetDeviceFamily()  returns 3 (0000ms, 0407ms total)
+T4021C6C0 000:408 JLINK_GetDeviceFamily()  returns 3 (0000ms, 0407ms total)
+T4021C6C0 000:408 JLINK_GetDeviceFamily()  returns 3 (0000ms, 0407ms total)
+T4021C6C0 000:408 JLINK_GetDeviceFamily()  returns 3 (0000ms, 0407ms total)
+T4021C6C0 000:408 JLINK_SetSpeed(100) (0001ms, 0408ms total)
+T4021C6C0 000:409 JLINK_GetHWStatus(...)  returns 0x00 (0002ms, 0410ms total)
+T4021C6C0 000:411 JLINK_GetSpeedInfo() 16000000 Hz / n, n >= 4 (0000ms, 0410ms total)
+T4021C6C0 000:411 JLINK_GetSpeed()  returns 0x64 (0000ms, 0410ms total)
+T4021C6C0 000:411 JLINK_SetResetDelay(0) (0000ms, 0410ms total)
+T4021C6C0 000:411 JLINK_Reset() -- CPU is running >0x1D0 JTAG> -- CPU is running >0x1D0 JTAG> -- CPU is running >0x208 JTAG> -- CPU is running >0x1D8 JTAG> -- CPU is running >0x1D8 JTAG> -- CPU is running >0x1D0 JTAG> -- CPU is running >0x1D0 JTAG> -- CPU is running >0x1D8 JTAG> >0x170 JTAG> >0x1598 JTAG> >0x40 JTAG> >0x40 JTAG> >0x30 JTAG> >0x40 JTAG> >0x48 JTAG> >0x40 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG>
+ >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x218 JTAG> >0x218 JTAG> >0x170 JTAG> >0x1598 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D8 JTAG> >0x1D8 JTAG> >0x1D8 JTAG> >0x1D8 JTAG> >0x1D8 JTAG> >0x1D8 JTAG> >0x1D8 JTAG> >0x1D8 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x218 JTAG> >0x218 JTAG> >0x170 JTAG> >0x1598 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG>
+ >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> (0781ms, 1191ms total)
+T4021C6C0 001:192 JLINK_Halt()  returns 0x00 (0002ms, 1193ms total)
+T4021C6C0 001:194 JLINK_GetDeviceFamily()  returns 3 (0000ms, 1193ms total)
+T4021C6C0 001:194 JLINK_ReadRegs(NumRegs = 28, Indexes: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 17, 18, 14, 15, 16, 21, 22, 23, 20, 27, 26, 25, 24, 65) >0x1D8 JTAG>
+ -- R0=0x00, R1=0x36DD, R2=0x00, R3=0x00, R4=0x3456ABCD, R5=0x3456ABCD, R6=0x12345678, R7=0x1000048C, R8=0x1EC6A01D, R9=0x694D50C, R10=0x141C999B, R11=0xBFE08918, R12=0x107, R13 (SP)=0x10000508, MSP=0x10000508, PSP=0x1F7D140C, R14=0x1FFF0D5F, R15 (PC)=0x36DC, XPSR=0x61000000, APSR=0x60000000, EPSR=0x1000000, IPSR=0x00, CFBP=0x00, CONTROL=0x00, FAULTMASK=0x00, BASEPRI=0x00, PRIMASK=0x00, CycleCnt=0xD0AC9D74  returns 0x00 (0006ms, 1199ms total)
+T4021C6C0 001:200 JLINK_ExecCommand(" device = LPC1768", ...)Device "LPC1768" selected (512 KB flash, 32 KB RAM).  returns 0x00 (0002ms, 1201ms total)
+T4021C6C0 001:219 JLINK_IsHalted()  returns TRUE (0000ms, 1201ms total)
+T4021C6C0 001:219 JLINK_BeginDownload(Flags = 0x00) (0000ms, 1201ms total)
+T4021C6C0 001:219 JLINK_WriteMem(0x00000000, 0x0D50 Bytes, ...) -- Data:  10 04 00 10 89 05 00 00 E9 05 00 00 E9 05 00 00 ... >0x1D8 JTAG>  returns 0xD50 (0007ms, 1208ms total)
+T4021C6C0 001:226 JLINK_EndDownload() -- -------------------------------------- -- Start of determining dirty areas -- End of determining dirty areas -- Start of preparing flash programming -- Calculating RAM usage -- RAM usage = 2772 Bytes -- Preserving registers -- Preparing memory -- Determining CPU clock frequency -- CPU clock frequency: 3619 kHz -- CPU frequency = 3619 kHz -- Preparing target -- Preserving additional used target memory -- Downloading RAMCode -- Using alternate TurboMode RAMCode
+ -- Checking target RAM -- Preparing RAMCode -- End of preparing flash programmingCPU is running at low speed (3619 kHz). -- CPU is running at 3619 kHz. -- Start of comparing flash -- CRC check was estimated as fastest method -- Comparing range 0x0000 - 0x0FFF (1 Sector, 4 KB), using multi-block CRC calculation -- CRC does not match for sector 0 -- End of comparing flash -- Start of erasing sectors -- Erasing range 0x00000000 - 0x00000FFF (  1 Sector, 4 KB) -- End of erasing sectors
+ -- Start of flash programming -- Programming range 0x00000000 - 0x00000FFF (  1 Sector, 4 KB) -- End of flash programming -- Flash programming performed for 1 range (4096 bytes) -- 0x0000 - 0x0FFF (001 Sector, 4 KB) -- Start of verifying flash -- Checksum calculation was estimated as fastest method -- End of verifying flash -- Start of restoring -- Restore RAMCode -- Restore content of target memory -- Restore target -- Restore memory -- Restore content of registers -- End of restoring
+ -- Total time needed: 1.837s (Prepare: 0.997s, Compare: 0.015s, Erase: 0.120s, Program: 0.578s, Verify: 0.008s, Restore: 0.118s)  returns 0x1000 (1838ms, 3046ms total)
+T4021C6C0 004:340 JLINK_SetResetDelay(0) (0000ms, 3049ms total)
+T4021C6C0 004:340 JLINK_Reset() >0x1D0 JTAG> >0x1D0 JTAG> >0x208 JTAG> >0x1D8 JTAG> >0x1D8 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> -- CPU is running >0x1D8 JTAG> >0x170 JTAG> >0x1598 JTAG> >0x40 JTAG> >0x40 JTAG> >0x30 JTAG> >0x40 JTAG> >0x48 JTAG> >0x40 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x218 JTAG> >0x218 JTAG> >0x170 JTAG> >0x1598 JTAG> >0x1D0 JTAG> >0x1D0 JTAG>
+ >0x1D8 JTAG> >0x1D8 JTAG> >0x1D8 JTAG> >0x1D8 JTAG> >0x1D8 JTAG> >0x1D8 JTAG> >0x1D8 JTAG> >0x1D8 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x218 JTAG> >0x218 JTAG> >0x170 JTAG> >0x1598 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x1D0 JTAG> >0x06 JTAG> (0737ms, 3786ms total)
+T4021C6C0 005:720 JLINK_GoEx(MaxEmulInsts = 0, Flags = 0x01) >0x170 JTAG> >0x218 JTAG> >0x218 JTAG> (0022ms, 3808ms total)
+T4021C6C0 013:609 JLINK_Close() >0x78 JTAG> >0x08 JTAG> (0011ms, 3819ms total)
+T4021C6C0 013:609  (0011ms, 3819ms total)
+T4021C6C0 013:609 Closed (0011ms, 3819ms total)
