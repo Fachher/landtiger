@@ -1,0 +1,21 @@
+Analysis of the LPC1768
+
+Q: How to see the disassemble of *.bin file?
+A: To see the disassemble we need to provide some further information to arm-none-eabi-objdump. In example the machinetype (arm) or the instruction set (thumb2)? 
+   arm-none-eabi-objdump -b binary --adjust-vma=0x0 -D ../Debug/blinky_lpc1768.bin -marm -Mforce-thumb
+
+Q: What is the difference between NASM and GAS ?
+A: 
+
+Q: How to emulate the LPC1768 (Qemu)
+A: 
+
+Q: How to write GCC linker scripts?
+A: 
+
+Q: How to write GAS assembler code?
+A: 
+
+
+
+

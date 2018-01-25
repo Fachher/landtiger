@@ -1,0 +1,9 @@
+00000138 <_mainCRTStartup>:
+
+00000c38 <_global_impure_ptr-0x8>:
+ c38:	6c6c6548 	.word	0x6c6c6548
+ c3c:	0000006f 	.word	0x0000006f
+
+00000554 <main>:
+
+
