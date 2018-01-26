@@ -1,6 +1,8 @@
 
 # Landtiger development board
 
+![alt text](https://raw.githubusercontent.com/Fachher/landtiger/master/resources/landtiger.png "Landtiger Board")
+
 The board is a clone of the KEIL MCB1700 board. It was cheap and provide many peripherals (i.e. UART, ISP, GPIO) and an ARM Cortex M3 prozesser. 
 
 ## Target of this project
