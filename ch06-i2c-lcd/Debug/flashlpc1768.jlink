@@ -1,0 +1,5 @@
+speed 400
+r
+h
+loadbin lcd_i2c_lpc1768.bin , 0
+
