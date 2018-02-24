@@ -1,347 +1,310 @@
 /*****************************************************************************
- *   i2c.c:  I2C C file for NXP LPC17xx Family Microprocessors
- *
- *   Copyright(C) 2009, NXP Semiconductor
- *   All rights reserved.
- *
- *   History
- *   2009.05.26  ver 1.00    Prelimnary version, first Release
- *
- *****************************************************************************/
-#include "lpc17xx.h"
+Copyright (c) 2011, Nic McDonald
+All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above
+   copyright notice, this list of conditions and the following
+   disclaimer in the documentation and/or other materials provided
+   with the distribution.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+******************************************************************************
+                                Copyright 2011
+                             All Rights Reserved
+ 
+ Information:
+   File Name  :  i2c0.c
+   Author(s)  :  Nic McDonald
+   Project    :  Quadrotor
+   Hardware   :  LPCXpresso LPC1768
+   Purpose    :  I2C Driver
+ 
+******************************************************************************
+ Modification History:
+   Revision   Date         Author    Description of Revision
+   1.00       03/04/2011   NGM       initial
+ 
+*****************************************************************************/
 #include "i2c.h"
-uint8_t buf[32];
-extern void Delay(uint32_t delaydata);
-
-/* Global variable                     */
-volatile uint8_t     I2C_sla;                                             /* I2C device slave address                */
-volatile uint32_t    I2C_suba;                                            /* I2C device internal subaddress            */
-volatile uint8_t     I2C_suba_num;                                        /* Number of bytes of I2C subaddress              */
-volatile uint8_t     *I2C_buf;                                            /* Data Buffer Pointer               */
-volatile uint32_t    I2C_num;                                             /* The number of data to be read / written        */
-volatile uint8_t     I2C_end;                                             /* I2C bus end flag: The end of the bus is  */
-/* Set 1                          */
-volatile uint8_t     I2C_suba_en;         /*  Subaddress control
-											  0 - The subaddress has been processed or does not require a subaddress
-											  1 - read operation
-											  2 - write operation
-											  */
-/* 
-   From device to device, the I2C communication protocol may vary, 
-   in the example below, the protocol uses repeated start to read data from or 
-   write to the device:
-   For master read: the sequence is: STA,Addr(W),offset,RE-STA,Addr(r),data...STO 
-   for master write: the sequence is: STA,Addr(W),length,RE-STA,Addr(w),data...STO
-   Thus, in state 8, the address is always WRITE. in state 10, the address could 
-   be READ or WRITE depending on the I2CCmd.
-   */   
-
-/*****************************************************************************
- ** Function name:		I2C0_IRQHandler
- **
- ** Descriptions:		I2C0 interrupt handler, deal with master mode
- **						only.
- **
- ** parameters:			None
- ** Returned value:		None
- ** 
- *****************************************************************************/
-void I2C0_IRQHandler(void)  
-{
-	uint8_t StatValue;
-	StatValue = LPC_I2C0->I2STAT & 0xf8;
-
-	switch ( StatValue )
-	{
-		case 0x08:		 										/* Send start condition */
-			if (I2C_suba_en == 1)
-			{	LPC_I2C0->I2DAT = I2C_sla &0xfe;	
-			}
-			else
-			{	LPC_I2C0->I2DAT = I2C_sla;	
-			}	
-			LPC_I2C0->I2CONCLR = (1 << 3)|(1 << 5);
-			break;
-
-		case 0x10:												/* Repeated start condition has been sent */ 
-			LPC_I2C0->I2DAT = I2C_sla;
-			LPC_I2C0->I2CONCLR = 0x28;
-			break;
-
-		case 0x18:											/* Received ACK send data*/
-		case 0x28:											/* Data in I2DAT sent, ACK */
-			if (I2C_suba_en == 0)
-			{
-
-				if(I2C_num>0)
-				{  
-					LPC_I2C0->I2DAT = *I2C_buf++; 			
-					LPC_I2C0->I2CONCLR = 0x28;
-					I2C_num--;
-					Delay(1);
-				}
-				else
-				{
-					LPC_I2C0->I2CONSET = (1 << 4); 				
-					LPC_I2C0->I2CONCLR = 0x28;  				
-					I2C_end =1;
-				}
-
-			}
-			if(I2C_suba_en == 1)
-			{
-				if(I2C_suba_num == 2)
-				{
-					LPC_I2C0->I2DAT = ((I2C_suba >> 8) & 0xff);
-					LPC_I2C0->I2CONCLR = 0x28;
-					I2C_suba_num--; 
-					break;
-				}
-				if(I2C_suba_num == 1)
-				{
-					LPC_I2C0->I2DAT = (I2C_suba & 0xff);
-					LPC_I2C0->I2CONCLR = 0x28;
-					I2C_suba_num--; 
-					break;
-				}
-				if(I2C_suba_num == 0)
-				{
-					LPC_I2C0->I2CONCLR = 0x08;
-					LPC_I2C0->I2CONSET = 0x20;
-					I2C_suba_en = 0;
-					break;		  		 
-				}   	
-			}
-
-			if ( I2C_suba_en == 2 )
-			{
-				if(I2C_suba_num > 0)
-				{
-					if(I2C_suba_num == 2)
-					{
-						LPC_I2C0->I2DAT = ((I2C_suba >> 8) & 0xff);
-						LPC_I2C0->I2CONCLR = 0x28;
-						I2C_suba_num--; 
-						break;
-					}
-					if(I2C_suba_num == 1)
-					{
-						LPC_I2C0->I2DAT = (I2C_suba & 0xff);
-						LPC_I2C0->I2CONCLR = 0x28;
-						I2C_suba_num--; 
-						I2C_suba_en  = 0;
-						break;
-					}
-				}
-			}
-			break;
-
-		case 0x40:									 /* Sent SLA + R, Received ACK */
-			if (I2C_num <= 1)
-			{	LPC_I2C0->I2CONCLR = 1 << 2;
-			}
-			else
-			{
-				LPC_I2C0->I2CONSET = 1 << 2;			/* assert ACK after data is received */
-			}
-			LPC_I2C0->I2CONCLR = 0x28;
-			break;
-
-		case 0x20:								/* regardless, it's a NACK *//* SLA + W sent */
-		case 0x30:	 							/* Data in I2DAT sent, non-acknowledgment received */	
-		case 0x38:		
-		case 0x48:								/* SLA + R sent, non-acknowledgment received */
-			LPC_I2C0->I2CONCLR = 0x28;
-			I2C_end = 0xFF;
-			break;
-
-		case 0x50:								/* Received data byte, ACK returned */
-			*I2C_buf++ = LPC_I2C0->I2DAT;
-			I2C_num--;
-			if (I2C_num ==1)					    /* Receive last byte             */
-			{	LPC_I2C0->I2CONCLR = 0x2c;	   		/* STA,SI,AA = 0                */
-			}
-			else
-			{	LPC_I2C0->I2CONSET = 0x04;			
-				LPC_I2C0->I2CONCLR = 0x28;	   
-			}
-			break;
-
-		case 0x58: 								/* Data bytes received, non-acknowledgment returned */	
-			*I2C_buf++ = LPC_I2C0->I2DAT;
-			LPC_I2C0->I2CONSET = 0X10;				/* assert ACK after data is received */
-			LPC_I2C0->I2CONCLR = 0X28;
-			I2C_end = 1;
-			break;
-
-		default:
-			break;
-	}
-
+ 
+// IC2 control bits
+#define AA      (1 << 2)
+#define SI      (1 << 3)
+#define STO     (1 << 4)
+#define STA     (1 << 5)
+#define I2EN    (1 << 6)
+ 
+// pointers setup by users functions
+static volatile uint8_t  slave_address; // formatted by send or receive
+static volatile uint8_t* buf;
+static volatile uint32_t buf_len;
+static volatile uint32_t num_transferred;
+static volatile uint32_t i2c0_busy;
+ 
+static inline uint8_t to_read_address(uint8_t address);
+static inline uint8_t to_write_address(uint8_t address);
+ 
+/*************DEBUG**************************************************************************************/
+uint8_t i2c_status_buf[100];
+uint32_t i2c_status_pos;
+uint8_t* i2c_buf(void) {return i2c_status_buf;}
+uint32_t i2c_pos(void) {return i2c_status_pos;}
+/*************DEBUG**************************************************************************************/
+ 
+LPC_I2C_TypeDef*  regs;
+IRQn_Type         irqn;
+uint32_t ignore_data_nack = 1;
+ 
+ 
+void i2c0_init(uint32_t i2c_freq, uint8_t int_pri) {
+    uint32_t pclk, fdiv;
+ 
+    regs = LPC_I2C0;
+    irqn = I2C0_IRQn;
+ 
+    // setup initial state
+    i2c0_busy = 0;
+    buf = 0;
+    buf_len = 0;
+    num_transferred = 0;
+ 
+    // give power to the I2C hardware
+    LPC_SC->PCONP |= (1 << 7);
+ 
+    // set PIO0.27 and PIO0.28 to I2C0 SDA and SCK
+    LPC_PINCON->PINSEL1 &= ~0x03C00000;
+    LPC_PINCON->PINSEL1 |=  0x01400000;
+ 
+    // set peripheral clock selection for I2C0
+    LPC_SC->PCLKSEL0 &= ~(3 << 14); // clear bits
+    LPC_SC->PCLKSEL0 |=  (1 << 14); // set to "01" (full speed)
+    pclk = SystemCoreClock;
+ 
+    // clear all flags
+    regs->I2CONCLR = AA | SI | STO | STA | I2EN;
+ 
+    // determine the frequency divider and set corresponding registers
+    //  this makes a 50% duty cycle
+    fdiv = pclk / i2c_freq;
+    regs->I2SCLL = fdiv >> 1; // fdiv / 2
+    regs->I2SCLH = fdiv - (fdiv >> 1); // compensate for odd dividers
+ 
+    // install interrupt handler
+    NVIC_EnableIRQ(irqn);
+ 
+    // set the priority of the interrupt
+    NVIC_SetPriority(irqn, int_pri); // '0' is highest
+ 
+    // enable the I2C (master only)
+    regs->I2CONSET = I2EN;
 }
-/*****************************************************************************
- ** Function name:		I2CInit
- **
- ** Descriptions:		Initialize I2C controller
- **
- ** parameters:			I2c mode is either MASTER or SLAVE
- ** Returned value:		true or false, return false if the I2C
- **				interrupt handler was not installed correctly
- ** 
- *****************************************************************************/
-uint32_t I2CInit( uint32_t I2cMode ) 
-{
-	LPC_SC->PCONP |= (1 << 19);
-
-	/* set PIO0.27 and PIO0.28 to I2C0 SDA and SCK */
-	/* function to 01 on both SDA and SCK. */
-	LPC_PINCON->PINSEL1 &= ~0x03C00000;
-	LPC_PINCON->PINSEL1 |= 0x01400000;	
-
-	/*--- Reset registers ---*/
-	LPC_I2C0->I2SCLL   = I2SCLL_SCLL;
-	LPC_I2C0->I2SCLH   = I2SCLH_SCLH;
-	if ( I2cMode == I2CSLAVE )
-	{
-		LPC_I2C0->I2ADR0 = 0xA0;
-	}    
-
-	/* Install interrupt handler */
-	NVIC_EnableIRQ(I2C0_IRQn);
-
-	LPC_I2C0->I2CONSET = I2CONSET_I2EN;
-	return( 1 );
+ 
+uint32_t i2c0_send(uint8_t address, uint8_t* buffer, uint32_t length) {
+    // check software FSM
+    if (i2c0_busy)
+        //error_led_trap(0x11000001, i2c0_busy, 0, 0, 0, 0, 0, 0, 0);
+        return 0;
+ 
+    // set to status to 'busy'
+    i2c0_busy = 1;
+ 
+    // setup pointers
+    slave_address = to_write_address(address);
+    buf = buffer;
+    buf_len = length;
+    num_transferred = 0;
+ 
+    // trigger a start condition
+    regs->I2CONSET = STA;
+ 
+    // wait for completion
+    while (i2c0_busy);
+ 
+    // get how many bytes were transferred
+    return num_transferred;
 }
-
-/*
- *********************************************************************************************************
- ** Function Name: I2C_WriteNByte ()
- ** Function Function: Write N bytes of data to subaddressed devices
- ** Entrance Parameter: sla Device slave address
- ** suba_type Subaddress structure 1-single-byte address 3-8 + X structure 2-double-byte address
- ** suba device internal physical address
- ** * s Pointer to the data to be written
- ** num The number of data to be written
- ** Exit parameters: 1 The operation was successful
- ** 0 The operation failed
- *********************************************************************************************************
- */
-uint8_t I2C_WriteNByte(uint8_t sla, uint8_t suba_type, uint32_t suba, uint8_t *s, uint32_t num)
-{
-	if (num > 0)                                                /* If the number of reads is 0, it returns an error */
-	{
-		if (suba_type == 1)
-		{
-			I2C_sla         = sla;                                      /* Read device slave address */
-			I2C_suba        = suba;                                     /* Device Sub Address */
-			I2C_suba_num    = 1;                                        /* Device subaddress is 1 byte */
-		}
-		if (suba_type == 2)
-		{
-			I2C_sla         = sla;                                      /* Read device slave address */
-			I2C_suba        = suba;                                     /* Device Sub Address */
-			I2C_suba_num    = 2;                                        /* Device subaddress is 1 byte */
-		}
-		if (suba_type == 3)
-		{
-			I2C_sla         = sla + ((suba >> 7 )& 0x0e);               /* Read device slave address */
-			I2C_suba        = suba;                                     /* Device Sub Address */
-			I2C_suba_num    = 1;                                        /* Device subaddress is 1 byte */
-		}
-
-		I2C_buf     	= s;                                                /* Data */
-		I2C_num     	= num;                                              /* The number of data */
-		I2C_suba_en 	= 2;                                                /* Have sub address, write operation */
-		I2C_end     	= 0;
-		LPC_I2C0->I2CONCLR = (1 << 2)|
-			(1 << 3)|
-			(1 << 5);  /* Clear SI flag */
-
-		LPC_I2C0->I2CONSET = (1 << 5)|
-			(1 << 6);	/* Set Start flag */
-
-		while(I2C_end == 0);
-		if(I2C_end)
-		{
-			Delay(20);
-			return 1;
-		}
-		else
-		{
-			Delay(20);
-			return 0;
-		}
-	}
-	Delay(20);
-	return 0;
+ 
+uint32_t i2c0_receive(uint8_t address, uint8_t* buffer, uint32_t length) {
+    // check software FSM
+    if (i2c0_busy)
+        //error_led_trap(0x11000002, i2c0_busy, 0, 0, 0, 0, 0, 0, 0);
+        return 0;
+ 
+    // set to status to 'busy'
+    i2c0_busy = 1;
+ 
+    // setup pointers
+    slave_address = to_read_address(address);
+    buf = buffer;
+    buf_len = length;
+    num_transferred = 0;
+ 
+    // trigger a start condition
+    regs->I2CONSET = STA;
+ 
+    // wait for completion
+    while (i2c0_busy);
+ 
+    // get how many bytes were transferred
+    return num_transferred;
 }
-/*
- ************************************************** ************************************************** *****
- ** Function Name: I2C_ReadNByte ()
- ** Function Function: Read N bytes of data from any address that has subaddress
- ** Entrance Parameter: sla Device slave address
- ** suba_type Subaddress structure 1 - single byte address 2-8 + X structure 2 - double byte address
- ** suba Device sub address
- ** s data receive buffer pointer
- ** num read the number
- ** Exit parameters: 1 The operation was successful
- ** 0 The operation failed
- ************************************************** ************************************************** *****
- */
-uint8_t I2C_ReadNByte (uint8_t sla, uint8_t suba_type, uint32_t suba, uint8_t *s, uint32_t num)
-{
-	if (num > 0)
-	{
-		if (suba_type == 1)
-		{
-			I2C_sla         = sla + 1;                                  /* Read device slave address, R=1          */
-			I2C_suba        = suba;                                     /* Device sub address                   */
-			I2C_suba_num    = 1;                                        /* Device subaddress is 1 byte            */
-		}
-		if (suba_type == 2)
-		{
-			I2C_sla         = sla + 1;                                  /* Read device slave address, R=1          */
-			I2C_suba        = suba;                                     /* Device sub address                   */
-			I2C_suba_num    = 2;                                        /* Device subaddress is 1 byte            */
-		}
-		if (suba_type == 3)
-		{
-			I2C_sla         = sla + ((suba >> 7 )& 0x0e) + 1;            /* Read device slave address, R=1          */
-			I2C_suba        = suba & 0x0ff;                              /* Device sub address                   */
-			I2C_suba_num    = 1;                                        /* Device subaddress is 1 byte            */
-		}
-
-
-
-		I2C_buf     	= s;                                                /* Data receive buffer pointer           */
-		I2C_num     	= num;                                              /* The number of reads                 */
-		I2C_suba_en	 	= 1;                                                /* Have subaddress read                   */
-		I2C_end     	= 0;
-
-		LPC_I2C0->I2CONCLR = (1 << 2)|
-			(1 << 3)|
-			(1 << 5);  /* Clear SI flag */
-
-		LPC_I2C0->I2CONSET = (1 << 5)|
-			(1 << 6);	/* Set Start flag */
-
-		while(I2C_end == 0);
-		if(I2C_end)
-		{
-			Delay(20);
-			return 1;
-		}
-		else
-		{
-			Delay(20);
-			return 0;
-		}
-
-	}
-	Delay(20);
-	return 0;
+ 
+void I2C0_IRQHandler(void) {
+    // get reason for interrupt
+    uint8_t status = regs->I2STAT;
+ 
+    // ignore data nack when control is true
+    if ((status == 0x30) && (ignore_data_nack))
+            status = 0x28;
+ 
+    // LPC17xx User Manual page 443:
+    //      "...read and write to [I2DAT] only while ... the SI bit is set"
+    //      "Data in I2DAT remains stable as long as the SI bit is set."
+ 
+ 
+    /**************************************DEBUG************************************************************/
+    i2c_status_buf[i2c_status_pos] = status;
+    i2c_status_pos++;
+    if (i2c_status_pos > 99)
+        i2c_status_pos = 0;
+    /**************************************DEBUG************************************************************/
+ 
+ 
+    switch(status) {
+ 
+    // Int: start condition has been transmitted
+    // Do:  send SLA+R or SLA+W
+    case 0x08:
+        regs->I2DAT = slave_address; // formatted by send or receive
+        regs->I2CONCLR = STA | SI;
+        break;
+ 
+    // Int: repeated start condition has been transmitted
+    // Do:  send SLA+R or SLA+W
+    //case 0x10:
+    //    regs->I2DAT = slave_address;
+    //    regs->I2CONCLR = STA | SI;
+    //    break;
+ 
+    // Int: SLA+W has been transmitted, ACK received
+    // Do:  send first byte of buffer if available
+    case 0x18:
+        if (num_transferred < buf_len) {
+            regs->I2DAT = buf[0];
+            regs->I2CONCLR = STO | STA | SI;
+        }
+        else {
+            regs->I2CONCLR = STA | SI;
+            regs->I2CONSET = STO;
+        }
+        break;
+ 
+    // Int: SLA+W has been transmitted, NACK received
+    // Do:  stop!
+    case 0x20:
+        regs->I2CONCLR = STA | SI;
+        regs->I2CONSET = STO;
+        num_transferred = 0xFFFFFFFF;
+        i2c0_busy = 0;
+        break;
+ 
+    // Int: data byte has been transmitted, ACK received
+    // Do:  load next byte if available, else stop
+    case 0x28:
+        num_transferred++;
+        if (num_transferred < buf_len) {
+            regs->I2DAT = buf[num_transferred];
+            regs->I2CONCLR = STO | STA | SI;
+        }
+        else {
+            regs->I2CONCLR = STA | SI;
+            regs->I2CONSET = STO;
+            i2c0_busy = 0;
+        }
+        break;
+ 
+    // Int: data byte has been transmitted, NACK received
+    // Do:  stop!
+    case 0x30:
+        regs->I2CONCLR = STA | SI;
+        regs->I2CONSET = STO;
+        i2c0_busy = 0;
+        break;
+ 
+    // Int: arbitration lost in SLA+R/W or Data bytes
+    // Do:  release bus
+    case 0x38:
+        regs->I2CONCLR = STO | STA | SI;
+        i2c0_busy = 0;
+        break;
+ 
+    // Int: SLA+R has been transmitted, ACK received
+    // Do:  determine if byte is to be received
+    case 0x40:
+        if (num_transferred < buf_len) {
+            regs->I2CONCLR = STO | STA | SI;
+            regs->I2CONSET = AA;
+        }
+        else {
+            regs->I2CONCLR = AA | STO | STA | SI;
+        }
+        break;
+ 
+    // Int: SLA+R has been transmitted, NACK received
+    // Do:  stop!
+    case 0x48:
+        regs->I2CONCLR = STA | SI;
+        regs->I2CONSET = STO;
+        num_transferred = 0xFFFFFFFF;
+        i2c0_busy = 0;
+        break;
+ 
+    // Int: data byte has been received, ACK has been returned
+    // Do:  read byte, determine if another byte is needed
+    case 0x50:
+        buf[num_transferred] = regs->I2DAT;
+        num_transferred++;
+        if (num_transferred < buf_len) {
+            regs->I2CONCLR = STO | STA | SI;
+            regs->I2CONSET = AA;
+        }
+        else {
+            regs->I2CONCLR = AA | STO | STA | SI;
+        }
+        break;
+ 
+    // Int: data byte has been received, NACK has been returned
+    // Do:  transfer is done, stop.
+    case 0x58:
+        regs->I2CONCLR = STA | SI;
+        regs->I2CONSET = STO;
+        i2c0_busy = 0;
+        break;
+ 
+    // something went wrong, trap error
+    default:
+        while (1); // flash a LED or something <img draggable="false" class="emoji" alt="" src="https://s0.wp.com/wp-content/mu-plugins/wpcom-smileys/twemoji/2/svg/1f626.svg" scale="0">
+        break;
+ 
+    }
 }
-/******************************************************************************
- **                            End Of File
- ******************************************************************************/
-
+ 
+static inline uint8_t to_read_address(uint8_t address) {
+    return (address << 1) | 0x01;
+}
+static inline uint8_t to_write_address(uint8_t address) {
+    return (address << 1);
+}
