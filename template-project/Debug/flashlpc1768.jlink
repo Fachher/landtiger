@@ -1,0 +1,5 @@
+speed 400
+r
+h
+loadbin artifact_lpc1768.bin , 0
+
