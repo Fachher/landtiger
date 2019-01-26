@@ -73,7 +73,6 @@ typedef signed short int      sint16_t;
 typedef unsigned short int    uint16_t;
 
 typedef signed  int    sint32_t;
-typedef unsigned  int  uint32_t;
 
 #define C_SINT8_MAX   0x7F
 #define C_SINT8_MIN  -128

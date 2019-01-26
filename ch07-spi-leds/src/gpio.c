@@ -33,7 +33,7 @@ Errors and omissions should be reported to codelibraries@exploreembedded.com
  **************************************************************************************************/
 
 
-#include <lpc17xx.h>
+#include "lpc17xx.h"
 #include "stdutils.h"
 #include "gpio.h"
 
