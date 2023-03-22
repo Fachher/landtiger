@@ -1,0 +1,5 @@
+speed 400
+r
+h
+loadbin cmake-build-debug/helloworld.bin , 0
+
