@@ -3,7 +3,6 @@
 #ifndef LPC_HELPER_H
 #define LPC_HELPER_H
 
-
 void delay(uint32_t milliseconds);
 
 void uart_init(int baudrate);
