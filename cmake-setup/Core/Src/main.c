@@ -1,5 +1,5 @@
-#include "../Inc/lpc17xx.h"
-#include "../Inc/lpc_types.h"
+#include "lpc17xx.h"
+#include "lpc_types.h"
 
 
 volatile uint32_t msTicks;                            /* counts 1ms timeTicks */
