@@ -442,12 +442,12 @@ typedef struct
 /** @brief  Serial Peripheral Interface (SPI) register structure definition */
 typedef struct
 {
-  __IO uint32_t SPCR;
-  __I  uint32_t SPSR;
-  __IO uint32_t SPDR;
-  __IO uint32_t SPCCR;
+  __IO uint32_t SPCR; // SPI Control Register
+  __I  uint32_t SPSR; // SPI Status Register
+  __IO uint32_t SPDR; // SPI Data Register
+  __IO uint32_t SPCCR; // SPI Clock Counter Register
        uint32_t RESERVED0[3];
-  __IO uint32_t SPINT;
+  __IO uint32_t SPINT; // SPI Interrupt Register
 } LPC_SPI_TypeDef;
 
 /*------------- Synchronous Serial Communication (SSP) -----------------------*/

@@ -1,4 +1,4 @@
-speed 400
+speed 20
 r
 h
 loadbin lcd_1602_lpc1768.bin , 0

@@ -1,0 +1,502 @@
+
+/*
+
+Diese Funktion deaktiviert zunächst alle Interrupts, um sicherzustellen, dass der Prozessor nicht aufgeweckt wird, 
+bevor er schlafen geht. Dann wird der Deep-Sleep-Modus aktiviert, 
+der den Prozessor in einen sehr energieeffizienten Schlafzustand versetzt. 
+Schließlich wird der Prozessor durch den "Wait for Interrupt" (WFI)-Befehl in den Schlafzustand versetzt. 
+Sobald ein Interrupt auftritt, wird der Prozessor aufgeweckt und die Interrupts werden wieder aktiviert.
+
+*/
+
+#include "LPC17xx.h"
+
+void sleep(void) {
+    // Disable interrupts
+    __disable_irq();
+
+    // Set sleep mode
+    SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
+
+    // Enter sleep mode
+    __WFI();
+
+    // Re-enable interrupts
+    __enable_irq();
+}
+
+
+
+/*
+
+Diese Funktion verwendet den SysTick-Timer, um einen Timeout von timeout_ms Millisekunden zu implementieren. 
+Zunächst wird die aktuelle Zeit (im SysTick-Register VAL) als Startzeit gespeichert. 
+In einer Schleife wird dann die vergangene Zeit berechnet und mit dem Timeout verglichen. 
+Sobald die vergangene Zeit größer oder gleich dem Timeout ist, wird die Schleife abgebrochen und die Funktion kehrt zurück.
+
+Beachte, dass die SystemCoreClock-Variable die Systemtaktgeschwindigkeit des LPC1768 enthält. 
+Wenn du eine andere Systemtaktgeschwindigkeit verwendest, musst du diese Variable entsprechend anpassen.
+
+*/
+
+void timeout(uint32_t timeout_ms) {
+    uint32_t start_time = SysTick->VAL;
+    uint32_t elapsed_time;
+
+    while (1) {
+        elapsed_time = start_time - SysTick->VAL;
+
+        if (elapsed_time >= timeout_ms * SystemCoreClock / 1000) {
+            break;
+        }
+    }
+}
+
+////////////////7
+
+/*
+
+In dieser Beispielanwendung wird die LED an Pin P0.22 verwendet. 
+Im main()-Funktionsteil wird die Pin-Konfiguration initialisiert und der SysTick-Timer auf eine Frequenz von 1 kHz konfiguriert, 
+indem er alle 1 Millisekunde unterbrochen wird. Im SysTick_Handler()-Funktionsteil wird ein Zähler erhöht, 
+und wenn der Zähler 500 erreicht, wird die LED am Pin P0.22 ein- oder ausgeschaltet. 
+Dies bewirkt, dass die LED mit einer Frequenz von 2 Hz blinkt. 
+Hinweis: Die 500 als Vergleichswert im if-Block kann angepasst werden, um die Blinkfrequenz zu ändern.
+
+Beachte, dass SysTick_Handler eine spezielle Funktion ist, die der LPC1768 erkennt und aufruft, 
+wenn der SysTick-Timer unterbrochen wird. Du musst den Funktionsnamen genau so schreiben, 
+damit das Interrupt-System des LPC1768 die Funktion aufrufen kann.
+
+*/
+
+#include "LPC17xx.h"
+
+#define LED_PIN 	(1 << 22) // P0.22
+
+void SysTick_Handler(void) {
+    static uint32_t tick_count = 0;
+    tick_count++;
+
+    if (tick_count == 500) {
+        // Toggle LED
+        LPC_GPIO0->FIOPIN ^= LED_PIN;
+
+        // Reset tick count
+        tick_count = 0;
+    }
+}
+
+int main(void) {
+    // Enable clock for GPIO and set LED pin to output
+    LPC_GPIO0->FIODIR |= LED_PIN;
+
+    // Configure SysTick to generate an interrupt every 1ms
+    SysTick_Config(SystemCoreClock / 1000);
+
+    while (1) {
+        // Main loop code goes here
+    }
+}
+
+
+
+/*
+
+Die Funktion SystemCoreClockUpdate ist Teil des CMSIS (Cortex Microcontroller Software Interface Standard) für den LPC1768-Mikrocontroller. 
+Diese Funktion wird verwendet, um die Systemtaktgeschwindigkeit (System Core Clock) des Mikrocontrollers zu aktualisieren.
+
+Die Systemtaktgeschwindigkeit ist die Geschwindigkeit des internen Taktgenerators des Mikrocontrollers, 
+der den Betrieb des Mikrocontrollers und seiner Peripherie steuert. 
+Die Funktion SystemCoreClockUpdate berechnet die neue Systemtaktgeschwindigkeit basierend auf den aktuellen Einstellungen 
+für den externen Kristalloszillator oder den internen RC-Oszillator sowie den Einstellungen für die Teiler der Clock-Quellen 
+und aktualisiert den SystemCoreClock Wert entsprechend.
+
+Die Funktion SystemCoreClockUpdate muss aufgerufen werden, wenn Änderungen an den Takteinstellungen vorgenommen werden, 
+um sicherzustellen, dass der SystemCoreClock-Wert korrekt ist und von anderen Teilen des Codes verwendet werden kann, 
+die auf die Systemtaktgeschwindigkeit zugreifen müssen, wie beispielsweise die Konfiguration von Timern, UARTs, SPIs, I2C-Bussen 
+und anderen Peripheriegeräten.
+
+*/
+SystemCoreClockUpdate();
+
+
+
+// Wie ändere ich die Taktgeschwindigkeit
+
+/*
+Die Takteinstellungen des LPC1768-Mikrocontrollers können über verschiedene Register und Konfigurationsoptionen im System Control Block (SCB) des Mikrocontrollers eingestellt werden. 
+Hier sind die grundlegenden Schritte, um Veränderungen an den Takteinstellungen vorzunehmen:
+
+- Wählen Sie die gewünschte Taktquelle: Der LPC1768 unterstützt verschiedene Taktquellen, 
+einschließlich eines externen Kristalloszillators und eines internen RC-Oszillators. 
+Wählen Sie die gewünschte Taktquelle und konfigurieren Sie die Register entsprechend.
+
+
+- Konfigurieren Sie die Teiler: Die Taktfrequenz der ausgewählten Taktquelle kann durch Teiler verringert werden.
+Konfigurieren Sie die Teiler entsprechend, um die gewünschte Systemtaktgeschwindigkeit zu erreichen.
+
+- Aktivieren Sie die neuen Takteinstellungen: Setzen Sie die entsprechenden Register, um die neuen Takteinstellungen zu aktivieren.
+
+- Rufen Sie SystemCoreClockUpdate auf: Rufen Sie die SystemCoreClockUpdate-Funktion auf, 
+um die neue Systemtaktgeschwindigkeit zu berechnen und den SystemCoreClock-Wert zu aktualisieren.
+
+Nachdem Sie diese Schritte ausgeführt haben, sollten die neuen Takteinstellungen aktiv sein und von anderen Teilen des Codes verwendet werden können, 
+die auf die Systemtaktgeschwindigkeit zugreifen müssen.
+Beachten Sie, dass es wichtig ist, die Auswirkungen der neuen Takteinstellungen auf andere Teile des Codes, 
+die auf die Taktgeschwindigkeit zugreifen, sorgfältig zu überprüfen und gegebenenfalls anzupassen.
+
+*/
+
+
+#include "LPC17xx.h"
+
+int main(void) {
+  // Konfiguriere den externen Kristalloszillator
+  LPC_SC->SCS |= 0x10; // Wähle den externen Kristalloszillator als Taktquelle aus
+  LPC_SC->CLKSRCSEL = 0x01; // Wähle die Taktquelle für den Kern als den externen Kristalloszillator
+  LPC_SC->CCLKCFG = 0x03; // Setze den Kern-Teiler auf 3, um eine Systemtaktgeschwindigkeit von 24 MHz zu erreichen
+  LPC_SC->PLL0CFG = 0x63; // Konfiguriere den PLL0-Teiler, um eine Ausgangsfrequenz von 288 MHz zu erreichen
+  LPC_SC->PLL0CON = 0x01; // Aktiviere den PLL0
+  while (!(LPC_SC->PLL0STAT & 0x00000400)); // Warte auf die PLL0-Lock-Statusanzeige
+  
+  // Aktiviere die neuen Takteinstellungen
+  LPC_SC->PLL0FEED = 0xAA;
+  LPC_SC->PLL0FEED = 0x55;
+  LPC_SC->CCLKCFG |= 0x01; // Aktiviere die neuen Takteinstellungen
+
+  // Rufe SystemCoreClockUpdate auf, um den SystemCoreClock-Wert zu aktualisieren
+  SystemCoreClockUpdate();
+
+  // Hier geht es weiter mit Ihrem Code ...
+  return 0;
+}
+
+/*
+
+Dieser Code wählt den externen Kristalloszillator als Taktquelle, konfiguriert die Teiler und aktiviert die neuen Takteinstellungen. 
+Anschließend ruft er SystemCoreClockUpdate auf, um den SystemCoreClock-Wert zu aktualisieren.
+
+Bitte beachten Sie, dass dieser Code nur ein Beispiel ist und je nach Anforderungen des Projekts angepasst werden muss. 
+Es ist auch wichtig, dass die Konfiguration der Takteinstellungen und die Aktivierung der neuen Einstellungen in der 
+richtigen Reihenfolge erfolgen, um sicherzustellen, dass der Mikrocontroller korrekt funktioniert.
+
+*/
+
+
+/* Hier ist ein Beispielcode für die Konfiguration des internen RC-Oszillators auf dem LPC1768-Mikrocontroller: */
+
+#include "LPC17xx.h"
+
+int main(void) {
+  // Konfiguriere den internen RC-Oszillator
+  LPC_SC->SCS |= 0x20; // Wähle den internen RC-Oszillator als Taktquelle aus
+  LPC_SC->CLKSRCSEL = 0x00; // Wähle die Taktquelle für den Kern als den internen RC-Oszillator
+  LPC_SC->CCLKCFG = 0x03; // Setze den Kern-Teiler auf 3, um eine Systemtaktgeschwindigkeit von 24 MHz zu erreichen
+
+  // Aktiviere die neuen Takteinstellungen
+  LPC_SC->PLL0FEED = 0xAA;
+  LPC_SC->PLL0FEED = 0x55;
+  LPC_SC->CCLKCFG |= 0x01; // Aktiviere die neuen Takteinstellungen
+
+  // Rufe SystemCoreClockUpdate auf, um den SystemCoreClock-Wert zu aktualisieren
+  SystemCoreClockUpdate();
+
+  // Hier geht es weiter mit Ihrem Code ...
+  return 0;
+}
+
+/*
+
+Dieser Code wählt den internen RC-Oszillator als Taktquelle, konfiguriert die Teiler und aktiviert die neuen Takteinstellungen. 
+Anschließend ruft er SystemCoreClockUpdate auf, um den SystemCoreClock-Wert zu aktualisieren.
+
+Bitte beachten Sie, dass der interne RC-Oszillator weniger präzise ist als der externe Kristalloszillator und daher 
+eine geringere Genauigkeit bei der Taktbereitstellung aufweisen kann. Wenn eine höhere Genauigkeit erforderlich ist, 
+ist es besser, einen externen Kristalloszillator zu verwenden.
+
+*/
+
+Q: Kann ich mehr als ein interrupt handler konfigurieren?
+
+A: Ja, es ist möglich, mehrere Interrupt-Handler auf dem LPC1768-Mikrocontroller zu konfigurieren. 
+Der Mikrocontroller verfügt über mehrere Interrupt-Quellen, die jeweils mit einem eigenen Interrupt-Handler konfiguriert werden können.
+Um mehrere Interrupt-Handler zu konfigurieren, müssen Sie zuerst den Interrupt-Controller des Mikrocontrollers konfigurieren, 
+um sicherzustellen, dass die Interrupts korrekt priorisiert und zugewiesen werden. 
+Dann können Sie jeden Interrupt-Handler einzeln konfigurieren und aktivieren.
+Hier ist ein Beispielcode, der zwei Interrupt-Handler für die UART0-Schnittstelle des LPC1768-Mikrocontrollers konfiguriert:
+
+
+#include "LPC17xx.h"
+
+// Erster Interrupt-Handler für UART0-Übertragungen
+void UART0_IRQHandler(void) {
+  // Hier wird der Code ausgeführt, der auf den Interrupt reagiert
+  // ...
+  
+  // Zurücksetzen des Interrupt-Flags
+  LPC_UART0->IER &= ~(1 << 0);
+}
+
+// Zweiter Interrupt-Handler für UART0-Fehler
+void UART0_Err_IRQHandler(void) {
+  // Hier wird der Code ausgeführt, der auf den Interrupt reagiert
+  // ...
+  
+  // Zurücksetzen des Interrupt-Flags
+  LPC_UART0->IER &= ~(1 << 2);
+}
+
+int main(void) {
+  // Konfiguriere den Interrupt-Controller
+  NVIC_EnableIRQ(UART0_IRQn); // Aktiviere den Interrupt für UART0-Übertragungen
+  NVIC_SetPriority(UART0_IRQn, 1); // Setze die Priorität des Interrupts auf 1
+  NVIC_EnableIRQ(UART0_Err_IRQn); // Aktiviere den Interrupt für UART0-Fehler
+  NVIC_SetPriority(UART0_Err_IRQn, 2); // Setze die Priorität des Interrupts auf 2
+  
+  // Konfiguriere UART0
+  // ...
+  
+  // Hier geht es weiter mit Ihrem Code ...
+  return 0;
+}
+
+
+
+// Working example uart hello world
+
+
+/****************************************************************************
+ *   $Id:: uarttest.c 6098 2011-01-08 02:26:20Z nxp12832                    $
+ *   Project: NXP LPC17xx UART example
+ *
+ *   Description:
+ *     This file contains UART test modules, main entry, to test UART APIs.
+ *
+ ****************************************************************************
+ * Software that is described herein is for illustrative purposes only
+ * which provides customers with programming information regarding the
+ * products. This software is supplied "AS IS" without any warranties.
+ * NXP Semiconductors assumes no responsibility or liability for the
+ * use of the software, conveys no license or title under any patent,
+ * copyright, or mask work right to the product. NXP Semiconductors
+ * reserves the right to make changes in the software without
+ * notification. NXP Semiconductors also make no representation or
+ * warranty that such application will be suitable for the specified
+ * use without further testing or modification.
+ ****************************************************************************/
+#include "lpc17xx.h"
+#include "lpc_types.h"
+#include "uart.h"
+
+extern volatile uint8_t UART0Buffer[BUFSIZE];
+extern volatile uint32_t UART1Count;
+extern volatile uint8_t UART1Buffer[BUFSIZE];
+
+volatile uint32_t msTicks; /* counts 1ms timeTicks */
+/*----------------------------------------------------------------------------
+  SysTick_Handler
+ *----------------------------------------------------------------------------*/
+void SysTick_Handler(void)
+{
+	msTicks++; /* increment counter necessary in Delay() */
+}
+
+/*------------------------------------------------------------------------------
+  delays number of tick Systicks (happens every 1 ms)
+ *------------------------------------------------------------------------------*/
+__INLINE static void Delay(uint32_t dlyTicks)
+{
+	uint32_t curTicks;
+
+	curTicks = msTicks;
+	while ((msTicks - curTicks) < dlyTicks)
+		;
+}
+
+/*****************************************************************************
+ **   Main Function  main()
+ This program has been test on Keil LPC1700 board.
+ *****************************************************************************/
+int main (void)
+{
+	/* SystemClockUpdate() updates the SystemFrequency variable */
+	SystemCoreClockUpdate();
+
+	UARTInit(0, 9600);	/* baud rate setting */
+	char message[] = "Hello, World!\r\n";
+	int length = sizeof(message) / sizeof(char);
+	// LPC_UART0->IER = IER_THRE | IER_RLS;
+
+	while (1) 
+	{				/* Loop forever */
+		// void UARTSend( uint32_t portNum, uint8_t *BufferPtr, uint32_t Length );
+
+		UARTSend(0, message, length);
+		//LPC_UART0->IER = IER_THRE | IER_RLS | IER_RBR;
+		for (volatile uint32_t i = 0; i < 10000000; i++);  // Delay
+	}
+}
+
+/*****************************************************************************
+ **                            End Of File
+ *****************************************************************************/
+
+ // another working example with interrupts
+
+ /****************************************************************************
+ *   $Id:: uarttest.c 6098 2011-01-08 02:26:20Z nxp12832                    $
+ *   Project: NXP LPC17xx UART example
+ *
+ *   Description:
+ *     This file contains UART test modules, main entry, to test UART APIs.
+ *
+ ****************************************************************************
+ * Software that is described herein is for illustrative purposes only
+ * which provides customers with programming information regarding the
+ * products. This software is supplied "AS IS" without any warranties.
+ * NXP Semiconductors assumes no responsibility or liability for the
+ * use of the software, conveys no license or title under any patent,
+ * copyright, or mask work right to the product. NXP Semiconductors
+ * reserves the right to make changes in the software without
+ * notification. NXP Semiconductors also make no representation or
+ * warranty that such application will be suitable for the specified
+ * use without further testing or modification.
+ ****************************************************************************/
+#include "lpc17xx.h"
+#include "lpc_types.h"
+#include "uart.h"
+
+extern volatile uint8_t UART0Buffer[BUFSIZE];
+extern volatile uint32_t UART1Count;
+extern volatile uint8_t UART1Buffer[BUFSIZE];
+
+/*----------------------------------------------------------------------------
+  SysTick_Handler
+ *----------------------------------------------------------------------------*/
+void SysTick_Handler(void)
+{
+	static uint32_t counter = 0;
+	if (counter++ == 1000) {  // Delay for 2 seconds (assuming SysTick is configured with a frequency of 1kHz)
+		send_uart("Hello World\r\n");
+		counter = 0;
+	}
+}
+
+/*------------------------------------------------------------------------------
+  delays number of tick Systicks (happens every 1 ms)
+ *------------------------------------------------------------------------------*/
+void SysTick_Delay(uint32_t ticks)
+{
+    uint32_t start = SysTick->VAL;
+    uint32_t end = start - ticks;
+    if (end > start) {
+        // The countdown loop has wrapped around, so adjust end time
+        end += SysTick->LOAD + 1;
+    }
+    while (SysTick->VAL > end);
+}
+
+/*****************************************************************************
+ **   Main Function  main()
+ This program has been test on Keil LPC1700 board.
+ *****************************************************************************/
+int main (void)
+{
+	/* SystemClockUpdate() updates the SystemFrequency variable */
+	SystemCoreClockUpdate();
+
+	UARTInit(0, 9600);	/* baud rate setting */
+	SysTick_Config(SystemCoreClock / 1000);
+
+	char message[] = "Hello, World!\r\n";
+	int length = sizeof(message) / sizeof(char);
+	// LPC_UART0->IER = IER_THRE | IER_RLS;
+
+	while (1) 
+	{				/* Loop forever */
+		// void UARTSend( uint32_t portNum, uint8_t *BufferPtr, uint32_t Length );
+
+		UARTSend(0, message, length);
+		//LPC_UART0->IER = IER_THRE | IER_RLS | IER_RBR;
+		// for (volatile uint32_t i = 0; i < 10000000; i++);  // Delay
+	}
+}
+
+/*****************************************************************************
+ **                            End Of File
+ *****************************************************************************/
+
+
+ // example provided by ChatGPT
+
+ #include "LPC17xx.h"
+
+#define UART_BAUD_RATE 9600
+#define UART_PORT LPC_UART3
+#define UART_PINSEL_TX 0b101  // Pin P0.0
+#define UART_PINSEL_RX 0b101  // Pin P0.1
+
+void init_uart(void)
+{
+    // Enable UART3 peripheral clock
+    LPC_SC->PCONP |= (1 << 25);
+
+    // Configure P0.0 as TXD3 and P0.1 as RXD3
+    LPC_PINCON->PINSEL0 &= ~0xF;
+    LPC_PINCON->PINSEL0 |= (UART_PINSEL_TX << 0) | (UART_PINSEL_RX << 2);
+
+    // Configure baud rate
+    uint32_t pclk = SystemCoreClock / 4;
+    uint32_t divisor = 16 * UART_BAUD_RATE;
+    UART_PORT->LCR |= (1 << 7);  // Enable access to Divisor Latches (DLAB)
+    UART_PORT->DLL = pclk / divisor;
+    UART_PORT->DLM = 0;
+    UART_PORT->LCR &= ~(1 << 7);  // Disable access to Divisor Latches
+
+    // Enable TX and RX
+    UART_PORT->LCR |= (1 << 0) | (1 << 1);
+}
+
+void send_uart(const char *str)
+{
+    while (*str) {
+        while (!(UART_PORT->LSR & (1 << 5)));  // Wait until TX FIFO is not full
+        UART_PORT->THR = *str++;
+    }
+}
+
+void SysTick_Handler(void)
+{
+    static uint32_t counter = 0;
+    if (counter++ == 1000) {  // Delay for 2 seconds (assuming SysTick is configured with a frequency of 1kHz)
+        send_uart("Hello World\r\n");
+        counter = 0;
+    }
+}
+
+void SysTick_Delay(uint32_t ticks)
+{
+    uint32_t start = SysTick->VAL;
+    uint32_t end = start - ticks;
+    if (end > start) {
+        // The countdown loop has wrapped around, so adjust end time
+        end += SysTick->LOAD + 1;
+    }
+    while (SysTick->VAL > end);
+}
+
+int main(void)
+{
+    init_uart();
+
+    // Configure SysTick with a frequency of 1kHz
+    SysTick_Config(SystemCoreClock / 1000);
+
+    while (1) {
+        // Do nothing in the main loop
+    }
+
+    return 0;
+}
+
+///
