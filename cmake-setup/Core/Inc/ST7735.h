@@ -149,25 +149,11 @@ unsigned int downArrowBMP[] = {8, 4,
 #define ST7735_RAMWR   0x2C
 #define ST7735_RAMRD   0x2E
 
-//Pin definitions (For PIC18F26K40) - change as required
-//NOTE: on older micros this will just be RC0, RC1, etc.
-//On newer chips we have to use the latch registers.
-#define CSX     LATC0 //Chip select
-#define RESX    LATC1 //Reset pin
-#define CMD     LATC2 //Command select
-//Software SPI pins if required
-#define SDO     LATC3
-#define SCK     LATC4
-
-//Use hardware SPI, will just big bang it through if false
-#define USE_HW_SPI  1
-
 //SPI Bus status register and transmission buffer
 //Set these to suit your particular microcontroller
 #define SPIBUF  SPI1TXB
 #define SPIIDLE SPI1STATUS & 0x20
 
-void spi_write(unsigned char data);
 void lcd_write_command(unsigned char data);
 void lcd_write_data(unsigned char data);
 void lcd_init(void);

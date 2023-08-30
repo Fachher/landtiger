@@ -1,80 +1,86 @@
 #include "lpc17xx.h"
 #include "helper.h"
 #include "ST7735.h"
+#include "gpio.h"
+#include "spi.h"
 
-// Definitionen für SPI-Pins
-#define SCK_PIN     15 // P0.15
-#define MISO_PIN    17 // P0.17
-#define MOSI_PIN    18 // P0.18
+#define PIN0 0
+#define PIN1 1
+#define PIN2 2
+#define PIN3 3
+#define PIN4 4
+#define PIN5 5
+#define PIN6 6
+#define PIN7 7
 
-// SPI-Geschwindigkeitseinstellungen
-#define SPI_CLOCK_DIVIDER 8 // PCLK / SPI_CLOCK_DIVIDER
+#define SCK 15
+#define MISO 17
+#define MOSI 18
 
-void pinMode(){
-    df
+// P2.0-P2.7 are directly connected to a 74LV244 driver (U11) followed by 8 red LEDs
+void GPIO_Init(void) {
+
+	// reset all pins to 0
+    LPC_PINCON->PINMODE4 &= ~(0xFFFF); 
+
+	// deactivate pullup/pulldown resistors (0b10 deactivates resistor per pin)
+	LPC_PINCON->PINMODE4 |= 0xAAAA;
+
+	// configure P2.0 -> P2.7 as output
+	LPC_GPIO2->FIODIR = 0x000000ff;
 }
 
 void SPI_Init(void) {
-    // Einschalten des SPI-Moduls
-    LPC_SC->PCONP |= (1 << 8); // PCONP Bit 8 aktiviert das SPI0-Modul
 
-    // SPI0-Pin-Konfiguration
+    LPC_SC->PCONP |= (1u << 8u);
 
-    LPC_PINCON->PINSEL0 |= (3 << (2 * SCK_PIN));
+  	LPC_PINCON->PINSEL0 |= (0b10 << 30); // SCK: P0.15
+    LPC_PINCON->PINSEL1 |= (0b10 << 2);  // MISO: P0.17
+    LPC_PINCON->PINSEL1 |= (0b10 << 4);  // MOSI: P0.18
 
-    | (3 << (2 * MISO_PIN)) | (3 << (2 * MOSI_PIN)));
+	// 1.set clock counter register to the desired clock rate.
+    LPC_SPI->SPCCR = 8;
 
-    LPC_PINCON->PINSEL0 &= ~((3 << (2 * SCK_PIN)) | (3 << (2 * MISO_PIN)) | (3 << (2 * MOSI_PIN)));
-    LPC_PINCON->PINSEL0 |= ((3 << (2 * SCK_PIN)) | (3 << (2 * MISO_PIN)) | (3 << (2 * MOSI_PIN)));
+	// 2. set control register to the desired settings.
+    LPC_SPI->SPCR = (1u << 5u);
+    LPC_SPI->SPCR |= (1u << 7u);
 
-    // SPI-Konfiguration
-    LPC_SPI->SPCR = (1 << 2) | (1 << 5); // Master-Modus, MSB-first
-
-    // Einstellung der Übertragungsgeschwindigkeit
-    uint32_t spiClockDivider = SPI_CLOCK_DIVIDER;
-    if (spiClockDivider < 8) {
-        spiClockDivider = 8; // Minimum Wert
-    } else if (spiClockDivider > 255) {
-        spiClockDivider = 255; // Maximum Wert
-    }
-    LPC_SPI->SPCCR = spiClockDivider;
-
-    // Aktivierung des SPI-Modus
-    LPC_SPI->SPCR |= (1 << 7); // SPI-Modul aktivieren
 }
 
-#define PIN_NUMBER 23 // P0.23
+int main(void) {
 
-int main (void)
-{
-	SystemCoreClockUpdate();
+    GPIO_Init();
+    //SPI_Init();
+    //lcd_init();
 
-	// configure GPIOs
-    LPC_SC->PCONP |= (1 << 15); // PCONP Bit 15 aktiviert GPIO
+	//delay(1000);
+    //draw_pixel(20, 20, 0xCC);
+	
+	unsigned char x = 0;
 
-    // Pin als Ausgang konfigurieren
-    LPC_GPIO0->FIODIR |= (1 << PIN_NUMBER); // Setze PIN_NUMBER als Ausgang
-
-    // Pin auf HIGH setzen
-    LPC_GPIO0->FIOSET |= (1 << PIN_NUMBER); // Setze PIN_NUMBER auf HIGH
-
-    // Pin auf LOW setzen
-    LPC_GPIO0->FIOCLR |= (1 << PIN_NUMBER); // Setze PIN_NUMBER auf LOW
-
-
-
-    SPI_Init();
-
-    lcd_init();
-
-    fill_rectangle((int)0, (int)0, (int)128, (int)128, BG_COLOUR);
-
-	uart_init(9600);
-
-	delay(2000);
-
-    while(1);
-
-    return;
+    while (1) {
+		//spi_write(0x9a);
+		//digitalWritePort0(1, x);
+		//digitalWritePort0(10, x);
+		//
+		delay(500);
+		//x = (x == 0 ? 1 : 0);
+		//digitalWritePort2(0, 0);
+		//digitalWritePort2(1, 0);
+		//digitalWritePort2(2, 0);
+		//digitalWritePort2(3, 0);
+		//digitalWritePort2(4, 0);
+		//digitalWritePort2(5, 0);
+		//digitalWritePort2(6, 0);
+		//digitalWritePort2(7, 0);
+		//delay(500);
+		//digitalWritePort2(1, x);
+		//delay(500);
+		//digitalWritePort2(2, x);
+		//delay(500);
+	//	digitalWritePort0(10, x);
+	//	x = (x == 0 ? 1 : 0);
+    //    delay(1000);
+    }
 
 }
