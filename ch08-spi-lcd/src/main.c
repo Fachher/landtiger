@@ -4,20 +4,7 @@
 #include "gpio.h"
 #include "spi.h"
 
-#define PIN0 0
-#define PIN1 1
-#define PIN2 2
-#define PIN3 3
-#define PIN4 4
-#define PIN5 5
-#define PIN6 6
-#define PIN7 7
 
-#define SCK 15
-#define MISO 17
-#define MOSI 18
-
-// P2.0-P2.7 are directly connected to a 74LV244 driver (U11) followed by 8 red LEDs
 void GPIO_Init(void) {
 
 	// reset all pins to 0
@@ -32,25 +19,45 @@ void GPIO_Init(void) {
 
 void SPI_Init(void) {
 
-    LPC_SC->PCONP |= (1u << 8u);
+	// set SCK, SSEL and MOSI as output
+	LPC_GPIO0->FIODIR = (0x1 << 15 | 0x1 << 16 | 0x1 << 18);
 
-  	LPC_PINCON->PINSEL0 |= (0b10 << 30); // SCK: P0.15
-    LPC_PINCON->PINSEL1 |= (0b10 << 2);  // MISO: P0.17
-    LPC_PINCON->PINSEL1 |= (0b10 << 4);  // MOSI: P0.18
+	// Pull-up-Widerstand für SCK aktivieren (falls erforderlich)
+	//LPC_PINCON->PINMODE0 &= ~(0x3 << 30); // Clear bits 30 and 31
+	//LPC_PINCON->PINMODE0 |= (0x2 << 30);  // Enable pull-up (10)
+
+	// Pull-up-Widerstand für MOSI aktivieren
+	//LPC_PINCON->PINMODE1 &= ~(0x3 << 2); // Clear bits 2 and 3
+	//LPC_PINCON->PINMODE1 |= (0x2 << 2);  // Enable pull-up (10)
+
+	// Pull-up-Widerstand für MISO aktivieren
+	//LPC_PINCON->PINMODE1 &= ~(0x3 << 4); // Clear bits 4 and 5
+	//LPC_PINCON->PINMODE1 |= (0x2 << 4);  // Enable pull-up (10)
+
+
+  	LPC_PINCON->PINSEL0 |= (0x3 << 30); // SCK: P0.15
+    LPC_PINCON->PINSEL1 |= (0x3 << 0);  // SSEL: P0.16
+    LPC_PINCON->PINSEL1 |= (0x3 << 2);  // MISO: P0.17
+    LPC_PINCON->PINSEL1 |= (0x3 << 4);  // MOSI: P0.18
+
+	digitalWritePort0(16, 1);
+    
+	LPC_SC->PCONP |= (1u << 8u);
 
 	// 1.set clock counter register to the desired clock rate.
     LPC_SPI->SPCCR = 8;
 
 	// 2. set control register to the desired settings.
-    LPC_SPI->SPCR = (1u << 5u);
-    LPC_SPI->SPCR |= (1u << 7u);
+    //LPC_SPI->SPCR = (1u << 5u);
+    //LPC_SPI->SPCR |= (1u << 4u);
+	LPC_SPI->SPCR = ((0<<3) | (1<<4) | (1<<5));
 
 }
 
 int main(void) {
 
     GPIO_Init();
-    //SPI_Init();
+    SPI_Init();
     //lcd_init();
 
 	//delay(1000);
@@ -58,29 +65,16 @@ int main(void) {
 	
 	unsigned char x = 0;
 
+
     while (1) {
-		//spi_write(0x9a);
-		//digitalWritePort0(1, x);
-		//digitalWritePort0(10, x);
-		//
-		delay(500);
-		//x = (x == 0 ? 1 : 0);
-		//digitalWritePort2(0, 0);
-		//digitalWritePort2(1, 0);
-		//digitalWritePort2(2, 0);
-		//digitalWritePort2(3, 0);
-		//digitalWritePort2(4, 0);
-		//digitalWritePort2(5, 0);
-		//digitalWritePort2(6, 0);
-		//digitalWritePort2(7, 0);
-		//delay(500);
-		//digitalWritePort2(1, x);
-		//delay(500);
-		//digitalWritePort2(2, x);
-		//delay(500);
-	//	digitalWritePort0(10, x);
-	//	x = (x == 0 ? 1 : 0);
-    //    delay(1000);
+		delay(2000);
+		x = (x == 0 ? 1 : 0);
+		digitalWritePort2(0, x);
+		delay(2000);
+		digitalWritePort2(1, x);
+		delay(2000);
+		spi_write(0x9a);
+		delay(2000);
     }
 
 }
