@@ -1,67 +1,58 @@
 #include "lpc17xx.h"
 #include "helper.h"
+#include "ST7735.h"
+#include "gpio.h"
+#include "spi.h"
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "EndlessLoop"
 
-// NOTE: each port pin takes two bits to configure
+#define PIN0 0
+#define PIN1 1
+#define PIN2 2
+
 void GPIO_Init(void) {
-    // GPIO (P0.0) will be used as CS = chip select
-    LPC_PINCON->PINSEL0 |= ~0b11u << (2u * 0);
-    LPC_GPIO0->FIODIR |= 0b001u;
 
+    // reset all pins to 0
+    LPC_PINCON->PINMODE4 &= ~(0xFFFF);
 
-    // GPIO (P0.1) will be used as command pin
-    LPC_PINCON->PINSEL0 |= ~0b11u << (2u * 1);
-    LPC_GPIO0->FIODIR |= 0b010u;
+    // deactivate pullup/pulldown resistors (0b10 deactivates resistor per pin)
+    LPC_PINCON->PINMODE4 |= 0xffff;
 
-    // GPIO (P0.2) will be used as reset pin
-    LPC_PINCON->PINSEL0 |= ~0b11u << (2u * 2);
-    LPC_GPIO0->FIODIR |= 0b100u;
+    // configure P2.0 -> P2.7 as output
+    LPC_GPIO2->FIODIR = 0x000000ff;
 }
 
 void SPI_Init(void) {
-    // activate SPI (page 55) it is actually not required as the default is ON
+    // set SCK, SSEL and MOSI as output
+    LPC_GPIO0->FIODIR = (0x1 << 15 | 0x1 << 16 | 0x1 << 18);
+
+    LPC_PINCON->PINSEL0 |= (0x3 << 30); // SCK: P0.15
+    LPC_PINCON->PINSEL1 |= (0x3 << 0);  // SSEL: P0.16
+    LPC_PINCON->PINSEL1 |= (0x3 << 2);  // MISO: P0.17
+    LPC_PINCON->PINSEL1 |= (0x3 << 4);  // MOSI: P0.18
+
+    // activate SPI
     LPC_SC->PCONP |= (1u << 8u);
 
-    // SPI0-Pin-Configuration
-    // __ __ __ __ __ __ 10 10 10 __ __ __ __ __ __ __
-    // 15 14 13 12 11 10 09 08 07 06 05 04 03 02 01 00
-
-    // SCK1 (P0.7)
-    LPC_PINCON->PINSEL0 |= 0b10u << (2u*7);
-
-    // MISO1 (P0.8)
-    LPC_PINCON->PINSEL0 |= 0b10u << (2u*8);
-
-    // MOSI1 (P0.9)
-    LPC_PINCON->PINSEL0 |= 0b10u << (2u*9);
-
-    // configure spi a master mode
-    LPC_SPI->SPCR = (1u << 5u);
-
-    // spi clock divider
+    // 1.set clock rate in the clock counter register
     LPC_SPI->SPCCR = 8;
 
-    // generate hardware interrupt each time SPIF or MODF bits are activated
-    LPC_SPI->SPCR |= (1u << 7u);
+    // 2. set control register
+    LPC_SPI->SPCR = 0<<3; // CPHA (Data is sampled on the first clock edge of SCK. A transfer starts and ends with activation and deactivation of the SSEL signal.)
+    LPC_SPI->SPCR |= 0<<4; // CPOL (SCK is active low)
+    LPC_SPI->SPCR |= 1<<5; // Master mode
 }
 
 int main(void) {
+    GPIO_Init();
+    SPI_Init();
+    //lcd_init();
 
-    LPC_SC->PCONP |= (1u << 15);
-    LPC_GPIO2->FIODIR = 0x000000ff;               /* LEDs PORT2 are Output */
-    LPC_GPIO0->FIODIR = 0x00200000;
-    LPC_GPIO0->FIOPIN |= 0x00200000u;
-
+    //draw_pixel(20, 20, 0xCC);
     while (1) {
-        LPC_GPIO2->FIOPIN |= (0x1u);
-        delay(500);
-        LPC_GPIO2->FIOPIN &= ~(0x1u);
-        delay(500);
+        digitalWritePort2(PIN0, 1);
+        spi_write(0x9a);
+        digitalWritePort2(PIN0, 0);
+        delay(2000);
     }
 
 }
-
-#pragma clang diagnostic pop
-

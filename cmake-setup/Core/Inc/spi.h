@@ -5,4 +5,6 @@
 #ifndef HELLOWORLD_SPI_H
 #define HELLOWORLD_SPI_H
 
+void spi_write(unsigned char data);
+
 #endif //HELLOWORLD_SPI_H
